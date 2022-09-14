@@ -12,6 +12,7 @@ public class Creature : MonoBehaviour
     public float turningSpeed;
     public float segmentSpeed;
     public float target_dist_range;
+    public float head_speed;
     public GameObject headPrefab;
     public GameObject segmentPrefab;
 
@@ -50,7 +51,7 @@ public class Creature : MonoBehaviour
         {
             segments[i] = Instantiate(segmentPrefab);
             segments[i].transform.SetParent(this.transform);
-            Physics.IgnoreCollision(segments[i].GetComponent<Collider>(), head.GetComponent<Collider>());
+            Physics.IgnoreCollision(segments[i].transform.GetChild(0).transform.GetComponent<Collider>(), head.GetComponent<Collider>());
 
             if(i < segments_len - 1) //if we aren't at the last segment
             {
@@ -65,16 +66,17 @@ public class Creature : MonoBehaviour
         {
             for(int j = i+1; j < segments_len; j++)
             {
-                Physics.IgnoreCollision(segments[i].GetComponent<Collider>(), segments[j].GetComponent<Collider>());
+                Physics.IgnoreCollision(segments[i].transform.GetChild(0).transform.GetComponent<Collider>(), segments[j].transform.GetChild(0).transform.GetComponent<Collider>());
             }
-        }
-
+        }       
+        /*
         heights = splitHeightCurve(segmentHeightCurve, segments_len);
         for(int i = 0; i < segments_len; i++)
         {
-            segments[i].transform.GetChild(0).transform.Rotate(slopes[i], 0f, 0f, Space.Self);
-            segments[i].transform.localPosition += new Vector3(0,heights[i] * maxHeightValue - (maxHeightValue / 2f),0);
+            //segments[i].transform.GetChild(0).transform.Rotate(slopes[i], 0f, 0f, Space.Self);
+            //segments[i].transform.position += new Vector3(0,heights[i] * maxHeightValue, i * (seg_dist));
         }
+        */
     }
 
     // Update is called once per frame
@@ -82,7 +84,7 @@ public class Creature : MonoBehaviour
     {
         if(Input.GetMouseButton(0))
         {
-            Vector3 dir = Vector3.Normalize(MouseLocation.position - head.transform.position);
+            Vector3 dir = Vector3.Normalize(MouseLocation.position - head.transform.position) * head_speed;
             head.GetComponent<Rigidbody>().velocity = new Vector3(dir.x, head.transform.position.y, dir.z);
         }
         head.transform.LookAt(new Vector3(MouseLocation.position.x, head.transform.position.y, MouseLocation.position.z));   
@@ -93,7 +95,7 @@ public class Creature : MonoBehaviour
             
             //SEGMENT POSITION
             float dist_to_target = Vector3.Distance(removeY(segments[i].transform.position), removeY(targets[i].transform.position));
-            Vector3 dir = Vector3.Normalize(removeY(targets[i].transform.position) - removeY(segments[i].transform.position));
+            Vector3 dir = Vector3.Normalize(removeY(targets[i].transform.position - segments[i].transform.position));
             segments[i].GetComponent<Rigidbody>().velocity = dir * segmentSpeed * dist_to_target;
 
             //SEGMENT ROTATION
